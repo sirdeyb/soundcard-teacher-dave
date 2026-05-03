@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESL Sound Card SD-X1 | Trim Edition</title>
+    <title>ESL Sound Card SD-X1 | Single-Stream</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
 
@@ -82,9 +82,10 @@
         .pad-emoji { font-size: 1.5rem; display: block; margin-bottom: 5px; }
         .pad-name { font-size: 0.75rem; font-weight: 700; color: #aaa; text-transform: uppercase; }
 
-        .playing { border-color: var(--accent-cyan) !important; background: #001a1c !important; }
+        /* Playing state */
+        .playing { border-color: var(--accent-cyan) !important; background: #001a1c !important; box-shadow: inset 0 0 15px rgba(0, 242, 255, 0.1); }
+        .playing .pad-name { color: var(--accent-cyan); }
 
-        /* Settings Area */
         .pad-settings {
             margin-top: 8px;
             padding-top: 8px;
@@ -96,10 +97,9 @@
         .pad-unit:hover .pad-settings { display: flex; }
 
         .trim-controls { display: flex; gap: 5px; align-items: center; }
-        .trim-label { font-size: 0.55rem; color: var(--text-gray); min-width: 30px; }
+        .trim-label { font-size: 0.55rem; color: #666; min-width: 30px; }
 
         input { background: #000; border: 1px solid #333; color: #00f2ff; font-size: 0.6rem; padding: 3px; border-radius: 3px; }
-        input[type="range"] { height: 10px; cursor: pointer; }
 
         .deck-footer { padding: 15px 30px; display: flex; justify-content: space-between; border-top: 1px solid #1a1a1a; }
         .btn-ui { background: transparent; border: 1px solid #333; color: var(--accent-cyan); padding: 6px 14px; border-radius: 4px; font-family: 'Orbitron', sans-serif; font-size: 0.6rem; cursor: pointer; }
@@ -112,7 +112,7 @@
         <div class="header">
             <div class="title-block">
                 <h1>ESL SOUND CARD</h1>
-                <p>SD-X1 • TRIM & SPEED MASTER v2.5</p>
+                <p>SD-X1 • SINGLE STREAM v4.0</p>
             </div>
         </div>
 
@@ -131,15 +131,32 @@
     </div>
 
     <script>
-        const limit = 20; 
-        let page = 1;
-        const storageKey = 'TeacherDave_Trim_Deck';
+        const storageKey = 'TeacherDave_Final_v4';
         
         let pads = JSON.parse(localStorage.getItem(storageKey)) || [
             { name: 'Correct', emoji: '✅', src: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3', speed: 1, start: 0, end: 0 }
         ];
 
+        // Global variables to track the SINGLE playing sound
+        let currentAudio = null;
+        let currentIdx = null;
+        let trimInterval = null;
+
         function sync() { localStorage.setItem(storageKey, JSON.stringify(pads)); }
+
+        function stopCurrent() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            if (trimInterval) clearInterval(trimInterval);
+            
+            // Remove glow from all buttons
+            document.querySelectorAll('.sound-pad').forEach(p => p.classList.remove('playing'));
+            
+            currentAudio = null;
+            currentIdx = null;
+        }
 
         function render() {
             const container = document.getElementById('grid');
@@ -151,60 +168,68 @@
                 
                 const btn = document.createElement('div');
                 btn.className = 'sound-pad';
+                btn.id = `pad-${idx}`;
                 btn.innerHTML = `<span class="pad-emoji">${pad.emoji}</span><span class="pad-name">${pad.name}</span>`;
                 
-                const audio = new Audio(pad.src);
-                
                 btn.onclick = () => {
+                    // 1. If clicking the SAME button that is already playing, just stop it.
+                    if (currentIdx === idx) {
+                        stopCurrent();
+                        return;
+                    }
+
+                    // 2. If something else is playing, stop it first.
+                    stopCurrent();
+
+                    // 3. Play the new sound
+                    const audio = new Audio(pad.src);
                     audio.playbackRate = pad.speed || 1;
                     audio.currentTime = pad.start || 0;
-                    audio.play();
+                    
+                    currentAudio = audio;
+                    currentIdx = idx;
                     btn.classList.add('playing');
+                    
+                    audio.play();
 
-                    // Trim logic
-                    const checkTrim = setInterval(() => {
+                    // Trim & Completion logic
+                    trimInterval = setInterval(() => {
                         if (pad.end > 0 && audio.currentTime >= pad.end) {
-                            audio.pause();
-                            clearInterval(checkTrim);
-                            btn.classList.remove('playing');
+                            stopCurrent();
                         }
                     }, 50);
 
-                    audio.onended = () => {
-                        clearInterval(checkTrim);
-                        btn.classList.remove('playing');
-                    };
+                    audio.onended = () => stopCurrent();
                 };
 
                 unit.appendChild(btn);
 
-                // Settings
+                // Settings UI
                 const settings = document.createElement('div');
                 settings.className = 'pad-settings';
 
-                // Basic Edits
                 const nameIn = document.createElement('input');
                 nameIn.value = pad.name; nameIn.onchange = (e) => { pads[idx].name = e.target.value; sync(); render(); };
                 
                 const emojiIn = document.createElement('input');
                 emojiIn.value = pad.emoji; emojiIn.onchange = (e) => { pads[idx].emoji = e.target.value; sync(); render(); };
 
-                // Trim Inputs
-                const trimRow = document.createElement('div');
-                trimRow.className = 'trim-controls';
-                trimRow.innerHTML = `<span class="trim-label">START</span>`;
-                const startIn = document.createElement('input');
-                startIn.type = 'number'; startIn.step = '0.1'; startIn.value = pad.start || 0;
-                startIn.onchange = (e) => { pads[idx].start = parseFloat(e.target.value); sync(); };
+                const trimS = document.createElement('div');
+                trimS.className = 'trim-controls';
+                trimS.innerHTML = `<span class="trim-label">START</span>`;
+                const sIn = document.createElement('input');
+                sIn.type = 'number'; sIn.step = '0.1'; sIn.value = pad.start || 0;
+                sIn.onchange = (e) => { pads[idx].start = parseFloat(e.target.value); sync(); };
+                trimS.appendChild(sIn);
 
-                const trimRowEnd = document.createElement('div');
-                trimRowEnd.className = 'trim-controls';
-                trimRowEnd.innerHTML = `<span class="trim-label">END</span>`;
-                const endIn = document.createElement('input');
-                endIn.type = 'number'; endIn.step = '0.1'; endIn.value = pad.end || 0;
-                endIn.onchange = (e) => { pads[idx].end = parseFloat(e.target.value); sync(); };
+                const trimE = document.createElement('div');
+                trimE.className = 'trim-controls';
+                trimE.innerHTML = `<span class="trim-label">END</span>`;
+                const eIn = document.createElement('input');
+                eIn.type = 'number'; eIn.step = '0.1'; eIn.value = pad.end || 0;
+                eIn.onchange = (e) => { pads[idx].end = parseFloat(e.target.value); sync(); };
+                trimE.appendChild(eIn);
 
-                // File Upload
                 const fileIn = document.createElement('input');
                 fileIn.type = 'file';
                 fileIn.onchange = (e) => {
@@ -213,13 +238,16 @@
                     reader.readAsDataURL(e.target.files[0]);
                 };
 
+                const del = document.createElement('button');
+                del.innerText = "DELETE"; del.style.background="none"; del.style.border="none"; del.style.color="#444"; del.style.fontSize="9px"; del.style.cursor="pointer";
+                del.onclick = (e) => { e.stopPropagation(); pads.splice(idx,1); sync(); render(); };
+
                 settings.appendChild(emojiIn);
                 settings.appendChild(nameIn);
-                trimRow.appendChild(startIn);
-                settings.appendChild(trimRow);
-                trimRowEnd.appendChild(endIn);
-                settings.appendChild(trimRowEnd);
+                settings.appendChild(trimS);
+                settings.appendChild(trimE);
                 settings.appendChild(fileIn);
+                settings.appendChild(del);
                 unit.appendChild(settings);
                 container.appendChild(unit);
             });
@@ -228,7 +256,7 @@
         function addNewPad() { pads.push({ name: 'NEW', emoji: '🎵', src: '', speed: 1, start: 0, end: 0 }); sync(); render(); }
         function exportData() {
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(JSON.stringify(pads));
-            const link = document.createElement('a'); link.href = dataUri; link.download = 'SDX1_Trim_Backup.json'; link.click();
+            const link = document.createElement('a'); link.href = dataUri; link.download = 'TeacherDave_SDX1_Final.json'; link.click();
         }
         function importData(e) {
             const reader = new FileReader();
