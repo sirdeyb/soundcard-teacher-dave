@@ -3,18 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESL Sound Card SD-X1 | Teacher Dave</title>
+    <title>ESL Sound Card SD-X1 | Trim Edition</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
 
         :root {
             --bg-black: #050505;
             --panel-bg: #0d0d0d;
-            --card-bg: #121212;
             --accent-cyan: #00f2ff;
             --accent-pink: #ff007b;
-            --accent-yellow: #f9d423;
-            --border-color: #222;
             --text-gray: #666;
         }
 
@@ -27,22 +24,19 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow-x: hidden;
+            padding: 20px 0;
         }
 
-        /* Main Chassis */
         .chassis {
             width: 95%;
-            max-width: 1000px;
+            max-width: 1200px;
             background: var(--panel-bg);
             border: 1px solid #1a1a1a;
             border-radius: 12px;
             padding: 2px;
             box-shadow: 0 40px 100px rgba(0,0,0,0.8);
-            position: relative;
         }
 
-        /* Top RGB Light Strip */
         .rgb-strip {
             height: 3px;
             width: 100%;
@@ -52,295 +46,190 @@
             border-radius: 10px 10px 0 0;
         }
 
-        @keyframes moveStrip {
-            0% { background-position: 0% 0%; }
-            100% { background-position: 200% 0%; }
-        }
+        @keyframes moveStrip { 0% { background-position: 0% 0%; } 100% { background-position: 200% 0%; } }
 
-        /* Header Section */
         .header {
-            padding: 20px 30px;
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #1a1a1a;
         }
 
-        .title-block h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.4rem;
-            letter-spacing: 4px;
-            margin: 0;
-            color: var(--accent-cyan);
-            text-transform: uppercase;
+        .title-block h1 { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: var(--accent-cyan); margin: 0; text-transform: uppercase; letter-spacing: 4px; }
+        
+        .main-deck { padding: 30px; min-height: 400px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+
+        .pad-unit {
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid #222;
         }
 
-        .title-block p {
-            font-size: 0.7rem;
-            color: var(--text-gray);
-            margin: 2px 0 0 0;
-            letter-spacing: 2px;
-        }
-
-        .status-dots { display: flex; gap: 8px; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; }
-        .dot-r { background: var(--accent-pink); }
-        .dot-y { background: var(--accent-yellow); }
-        .dot-g { background: #48ff00; }
-
-        /* Sound Grid Container */
-        .main-deck {
-            padding: 40px;
-            background-image: radial-gradient(circle at 50% 50%, #151515 0%, transparent 100%);
-            min-height: 350px;
-        }
-
-        .grid-header {
-            font-size: 0.7rem;
-            color: var(--text-gray);
-            letter-spacing: 2px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #1a1a1a;
-            padding-bottom: 5px;
-            text-transform: uppercase;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 15px;
-        }
-
-        /* Buttons Styling */
         .sound-pad {
             background: #0a0a0a;
-            border: 1px solid #222;
-            border-radius: 8px;
-            padding: 20px 10px;
+            border-radius: 6px;
+            padding: 15px 5px;
             cursor: pointer;
-            transition: all 0.3s;
             text-align: center;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid transparent;
+            transition: 0.3s;
         }
 
-        .sound-pad:hover { border-color: #444; background: #111; }
-
-        .pad-emoji {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
-            display: block;
-        }
-
-        .pad-name {
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            color: #ccc;
-            text-transform: uppercase;
-        }
-
-        /* Active Glows (Per Pad) */
-        .sound-pad::before {
-            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 30%; height: 2px; background: transparent; transition: 0.3s;
-        }
+        .sound-pad:hover { background: #111; border-color: #333; }
+        .pad-emoji { font-size: 1.5rem; display: block; margin-bottom: 5px; }
+        .pad-name { font-size: 0.75rem; font-weight: 700; color: #aaa; text-transform: uppercase; }
 
         .playing { border-color: var(--accent-cyan) !important; background: #001a1c !important; }
-        .playing .pad-emoji { transform: scale(1.1); transition: 0.1s; }
 
-        /* Control Footer */
-        .deck-footer {
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid #1a1a1a;
-        }
-
-        .action-btns { display: flex; gap: 15px; }
-        
-        .btn-ui {
-            background: transparent;
-            border: 1px solid #333;
-            color: var(--accent-cyan);
-            padding: 8px 18px;
-            border-radius: 6px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.65rem;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-ui:hover { background: rgba(0, 242, 255, 0.1); border-color: var(--accent-cyan); }
-        .btn-delete { color: var(--accent-pink); }
-        .btn-delete:hover { background: rgba(255, 0, 123, 0.1); border-color: var(--accent-pink); }
-
-        .nav-controls { display: flex; align-items: center; gap: 20px; color: var(--text-gray); font-size: 0.8rem; }
-        .nav-arrow { background: #111; border: 1px solid #222; color: #555; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
-        .nav-arrow:hover { color: #fff; border-color: #444; }
-
-        /* Pad Settings Overlay */
+        /* Settings Area */
         .pad-settings {
-            margin-top: 10px;
-            padding-top: 10px;
+            margin-top: 8px;
+            padding-top: 8px;
             border-top: 1px solid #1a1a1a;
             display: none;
             flex-direction: column;
-            gap: 8px;
+            gap: 5px;
         }
         .pad-unit:hover .pad-settings { display: flex; }
 
-        input[type="text"], input[type="range"] {
-            background: #000; border: 1px solid #333; color: #00f2ff; font-size: 0.7rem; padding: 4px;
-        }
+        .trim-controls { display: flex; gap: 5px; align-items: center; }
+        .trim-label { font-size: 0.55rem; color: var(--text-gray); min-width: 30px; }
 
-        .system-status { font-size: 0.6rem; color: #333; letter-spacing: 1px; }
+        input { background: #000; border: 1px solid #333; color: #00f2ff; font-size: 0.6rem; padding: 3px; border-radius: 3px; }
+        input[type="range"] { height: 10px; cursor: pointer; }
 
+        .deck-footer { padding: 15px 30px; display: flex; justify-content: space-between; border-top: 1px solid #1a1a1a; }
+        .btn-ui { background: transparent; border: 1px solid #333; color: var(--accent-cyan); padding: 6px 14px; border-radius: 4px; font-family: 'Orbitron', sans-serif; font-size: 0.6rem; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="chassis">
         <div class="rgb-strip"></div>
-        
         <div class="header">
             <div class="title-block">
                 <h1>ESL SOUND CARD</h1>
-                <p>BY TEACHER DAVE • RGB • MODEL SD-X1</p>
-            </div>
-            <div class="status-dots">
-                <div class="dot dot-r"></div>
-                <div class="dot dot-y"></div>
-                <div class="dot dot-g"></div>
+                <p>SD-X1 • TRIM & SPEED MASTER v2.5</p>
             </div>
         </div>
 
         <div class="main-deck">
-            <div class="grid-header">SOUND BUTTONS — PAGE <span id="page-num">1</span></div>
             <div id="grid" class="grid"></div>
         </div>
 
         <div class="deck-footer">
-            <div class="action-btns">
-                <button class="btn-ui" onclick="addNewPad()"><span>+</span> ADD BUTTON</button>
-                <button class="btn-ui btn-delete" onclick="exportData()">💾 BACKUP DECK</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-ui" onclick="addNewPad()">+ ADD BUTTON</button>
+                <button class="btn-ui" style="color:var(--accent-pink)" onclick="exportData()">💾 BACKUP</button>
                 <button class="btn-ui" style="color:#555" onclick="document.getElementById('importFile').click()">📂 LOAD</button>
                 <input type="file" id="importFile" style="display:none" onchange="importData(event)">
             </div>
-            
-            <div class="nav-controls">
-                <button class="nav-arrow" onclick="movePage(-1)">‹</button>
-                <span id="page-indicator">1 / 1</span>
-                <button class="nav-arrow" onclick="movePage(1)">›</button>
-            </div>
-        </div>
-        
-        <div style="padding: 10px 30px; display: flex; justify-content: space-between;">
-            <div class="system-status">SYSTEM READY</div>
-            <div class="system-status">ESL SOUND CARD BY TEACHER DA V2.0</div>
         </div>
     </div>
 
     <script>
-        const limit = 5;
+        const limit = 20; 
         let page = 1;
-        const storageKey = 'TeacherDave_SDX1';
+        const storageKey = 'TeacherDave_Trim_Deck';
         
-        const defaults = [
-            { name: 'Correct', emoji: '✅', src: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3', speed: 1 },
-            { name: 'Incorrect', emoji: '❌', src: 'https://assets.mixkit.co/active_storage/sfx/1119/1119-preview.mp3', speed: 1 },
-            { name: 'Laugh', emoji: '😂', src: 'https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.mp3', speed: 1 },
-            { name: 'Confetti', emoji: '🎉', src: 'https://assets.mixkit.co/active_storage/sfx/2014/2014-preview.mp3', speed: 1 },
-            { name: 'Drum Roll', emoji: '🥁', src: 'https://assets.mixkit.co/active_storage/sfx/2020/2020-preview.mp3', speed: 1 }
+        let pads = JSON.parse(localStorage.getItem(storageKey)) || [
+            { name: 'Correct', emoji: '✅', src: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3', speed: 1, start: 0, end: 0 }
         ];
-
-        let pads = JSON.parse(localStorage.getItem(storageKey)) || [...defaults];
 
         function sync() { localStorage.setItem(storageKey, JSON.stringify(pads)); }
 
         function render() {
             const container = document.getElementById('grid');
             container.innerHTML = '';
-            const start = (page - 1) * limit;
-            const currentSet = pads.slice(start, start + limit);
-
-            currentSet.forEach((pad, i) => {
-                const idx = start + i;
+            
+            pads.forEach((pad, idx) => {
                 const unit = document.createElement('div');
                 unit.className = 'pad-unit';
                 
-                // Sound Pad
                 const btn = document.createElement('div');
                 btn.className = 'sound-pad';
-                btn.innerHTML = `<span class="pad-emoji">${pad.emoji || '🎵'}</span><span class="pad-name">${pad.name}</span>`;
+                btn.innerHTML = `<span class="pad-emoji">${pad.emoji}</span><span class="pad-name">${pad.name}</span>`;
                 
                 const audio = new Audio(pad.src);
-                btn.onclick = (e) => {
-                    if(e.target.tagName === 'INPUT') return;
+                
+                btn.onclick = () => {
                     audio.playbackRate = pad.speed || 1;
-                    audio.currentTime = 0;
+                    audio.currentTime = pad.start || 0;
                     audio.play();
                     btn.classList.add('playing');
-                    audio.onended = () => btn.classList.remove('playing');
+
+                    // Trim logic
+                    const checkTrim = setInterval(() => {
+                        if (pad.end > 0 && audio.currentTime >= pad.end) {
+                            audio.pause();
+                            clearInterval(checkTrim);
+                            btn.classList.remove('playing');
+                        }
+                    }, 50);
+
+                    audio.onended = () => {
+                        clearInterval(checkTrim);
+                        btn.classList.remove('playing');
+                    };
                 };
+
                 unit.appendChild(btn);
 
-                // Hidden Settings (Visible on Hover)
+                // Settings
                 const settings = document.createElement('div');
                 settings.className = 'pad-settings';
+
+                // Basic Edits
+                const nameIn = document.createElement('input');
+                nameIn.value = pad.name; nameIn.onchange = (e) => { pads[idx].name = e.target.value; sync(); render(); };
                 
                 const emojiIn = document.createElement('input');
-                emojiIn.type = 'text'; emojiIn.value = pad.emoji; emojiIn.placeholder = "Emoji";
-                emojiIn.onchange = (e) => { pads[idx].emoji = e.target.value; sync(); render(); };
-                
-                const nameIn = document.createElement('input');
-                nameIn.type = 'text'; nameIn.value = pad.name; emojiIn.placeholder = "Name";
-                nameIn.onchange = (e) => { pads[idx].name = e.target.value; sync(); render(); };
+                emojiIn.value = pad.emoji; emojiIn.onchange = (e) => { pads[idx].emoji = e.target.value; sync(); render(); };
 
+                // Trim Inputs
+                const trimRow = document.createElement('div');
+                trimRow.className = 'trim-controls';
+                trimRow.innerHTML = `<span class="trim-label">START</span>`;
+                const startIn = document.createElement('input');
+                startIn.type = 'number'; startIn.step = '0.1'; startIn.value = pad.start || 0;
+                startIn.onchange = (e) => { pads[idx].start = parseFloat(e.target.value); sync(); };
+
+                const trimRowEnd = document.createElement('div');
+                trimRowEnd.className = 'trim-controls';
+                trimRowEnd.innerHTML = `<span class="trim-label">END</span>`;
+                const endIn = document.createElement('input');
+                endIn.type = 'number'; endIn.step = '0.1'; endIn.value = pad.end || 0;
+                endIn.onchange = (e) => { pads[idx].end = parseFloat(e.target.value); sync(); };
+
+                // File Upload
                 const fileIn = document.createElement('input');
-                fileIn.type = 'file'; fileIn.style.fontSize = '8px';
+                fileIn.type = 'file';
                 fileIn.onchange = (e) => {
                     const reader = new FileReader();
                     reader.onload = (ev) => { pads[idx].src = ev.target.result; sync(); render(); };
                     reader.readAsDataURL(e.target.files[0]);
                 };
 
-                const del = document.createElement('button');
-                del.innerText = "DELETE PAD";
-                del.style.background = "none"; del.style.border = "1px solid #300"; del.style.color = "#600"; del.style.fontSize = "8px";
-                del.onclick = () => { if(confirm("Delete?")) { pads.splice(idx, 1); sync(); render(); } };
-
                 settings.appendChild(emojiIn);
                 settings.appendChild(nameIn);
+                trimRow.appendChild(startIn);
+                settings.appendChild(trimRow);
+                trimRowEnd.appendChild(endIn);
+                settings.appendChild(trimRowEnd);
                 settings.appendChild(fileIn);
-                settings.appendChild(del);
                 unit.appendChild(settings);
-
                 container.appendChild(unit);
             });
-
-            document.getElementById('page-num').innerText = page;
-            document.getElementById('page-indicator').innerText = `${page} / ${Math.ceil(pads.length/limit) || 1}`;
         }
 
-        function addNewPad() { pads.push({ name: 'NEW', emoji: '✨', src: '', speed: 1 }); sync(); render(); }
-        function movePage(dir) { 
-            if (dir === 1 && page * limit < pads.length) page++; 
-            else if (dir === -1 && page > 1) page--; 
-            render(); 
-        }
-
+        function addNewPad() { pads.push({ name: 'NEW', emoji: '🎵', src: '', speed: 1, start: 0, end: 0 }); sync(); render(); }
         function exportData() {
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(JSON.stringify(pads));
-            const link = document.createElement('a'); link.href = dataUri; link.download = 'TeacherDave_SDX1_Backup.json'; link.click();
+            const link = document.createElement('a'); link.href = dataUri; link.download = 'SDX1_Trim_Backup.json'; link.click();
         }
-
         function importData(e) {
             const reader = new FileReader();
             reader.onload = (ev) => { pads = JSON.parse(ev.target.result); sync(); render(); };
