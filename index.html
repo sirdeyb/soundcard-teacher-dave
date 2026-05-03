@@ -1,1368 +1,353 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ESL Sound Card by Teacher Dave</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --rgb1: #ff0080;
-    --rgb2: #ff6600;
-    --rgb3: #ffff00;
-    --rgb4: #00ff88;
-    --rgb5: #00cfff;
-    --rgb6: #7b2fff;
-    --panel: #0d0d0f;
-    --panel2: #141418;
-    --panel3: #1a1a20;
-    --metal: #1e1e24;
-    --screw: #2a2a32;
-    --text-bright: #e8f4ff;
-    --text-dim: #6a7a8a;
-    --accent: #00cfff;
-    --btn-h: 110px;
-  }
-
-  body {
-    background: #050507;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 24px 16px 40px;
-    font-family: 'Rajdhani', sans-serif;
-    overflow-x: hidden;
-  }
-
-  /* Animated RGB background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: 
-      radial-gradient(ellipse 60% 40% at 20% 50%, rgba(123,47,255,0.07) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 80% 50%, rgba(0,207,255,0.06) 0%, transparent 60%),
-      radial-gradient(ellipse 40% 30% at 50% 80%, rgba(255,0,128,0.05) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
-    animation: bgPulse 8s ease-in-out infinite alternate;
-  }
-
-  @keyframes bgPulse {
-    0% { opacity: 0.7; }
-    100% { opacity: 1.3; }
-  }
-
-  .device-wrap {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 980px;
-  }
-
-  /* Top brand bar */
-  .brand-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    background: linear-gradient(90deg, #0d0d0f 0%, #141418 50%, #0d0d0f 100%);
-    border: 1px solid rgba(0,207,255,0.2);
-    border-bottom: none;
-    border-radius: 12px 12px 0 0;
-  }
-
-  .brand-name {
-    font-family: 'Orbitron', monospace;
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: 4px;
-    background: linear-gradient(90deg, var(--rgb5), var(--rgb6), var(--rgb1));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: brandShift 4s linear infinite;
-    background-size: 200% 100%;
-  }
-
-  @keyframes brandShift {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-  }
-
-  .brand-model {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-  }
-
-  .status-lights {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .sled {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    animation: sled 1.4s ease-in-out infinite;
-  }
-
-  .sled:nth-child(1) { background: #ff3366; animation-delay: 0s; }
-  .sled:nth-child(2) { background: #ffaa00; animation-delay: 0.2s; }
-  .sled:nth-child(3) { background: #00ff88; animation-delay: 0.4s; }
-
-  @keyframes sled {
-    0%, 100% { opacity: 0.3; box-shadow: none; }
-    50% { opacity: 1; box-shadow: 0 0 8px currentColor; }
-  }
-
-  /* Main chassis */
-  .chassis {
-    background: linear-gradient(180deg, #16161c 0%, #0e0e12 40%, #121218 100%);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-top: none;
-    border-radius: 0 0 16px 16px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* RGB strip along top */
-  .rgb-strip {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, 
-      var(--rgb1), var(--rgb2), var(--rgb3), 
-      var(--rgb4), var(--rgb5), var(--rgb6), var(--rgb1));
-    background-size: 200% 100%;
-    animation: rgbSlide 3s linear infinite;
-    box-shadow: 0 0 12px rgba(0,207,255,0.5), 0 0 24px rgba(123,47,255,0.3);
-  }
-
-  @keyframes rgbSlide {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-  }
-
-  /* Side RGB strips */
-  .chassis::before, .chassis::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    width: 2px;
-    bottom: 0;
-    background: linear-gradient(180deg, 
-      var(--rgb6), var(--rgb5), var(--rgb4), 
-      var(--rgb3), var(--rgb2), var(--rgb1), var(--rgb6));
-    background-size: 100% 200%;
-    animation: rgbSlideV 3s linear infinite;
-    opacity: 0.6;
-  }
-  .chassis::before { left: 0; }
-  .chassis::after { right: 0; }
-
-  @keyframes rgbSlideV {
-    0% { background-position: 50% 0%; }
-    100% { background-position: 50% 200%; }
-  }
-
-  /* Chassis texture overlay */
-  .chassis-inner {
-    background: 
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(255,255,255,0.012) 2px,
-        rgba(255,255,255,0.012) 3px
-      );
-    border-radius: 0 0 12px 12px;
-    padding: 16px;
-    position: relative;
-  }
-
-  /* Section label */
-  .section-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 3px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(0,207,255,0.3), transparent);
-  }
-
-  /* Button grid */
-  .btn-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 14px;
-    margin-bottom: 16px;
-  }
-
-  /* Sound button */
-  .sound-btn {
-    position: relative;
-    height: var(--btn-h);
-    border-radius: 10px;
-    cursor: pointer;
-    border: none;
-    outline: none;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    transition: transform 0.08s ease, box-shadow 0.15s ease;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-
-  .sound-btn:active {
-    transform: scale(0.94);
-  }
-
-  /* Button base */
-  .sound-btn .btn-body {
-    position: absolute;
-    inset: 0;
-    border-radius: 10px;
-    background: linear-gradient(160deg, #1e1e28 0%, #141418 60%, #111115 100%);
-    border: 1px solid rgba(255,255,255,0.09);
-    transition: all 0.15s ease;
-  }
-
-  /* RGB glow border per button */
-  .sound-btn .btn-glow {
-    position: absolute;
-    inset: -1px;
-    border-radius: 11px;
-    background: var(--btn-color, #00cfff);
-    opacity: 0;
-    filter: blur(8px);
-    transition: opacity 0.15s ease;
-    z-index: -1;
-  }
-
-  .sound-btn:hover .btn-glow,
-  .sound-btn.playing .btn-glow {
-    opacity: 0.45;
-  }
-
-  .sound-btn.playing .btn-body {
-    background: linear-gradient(160deg, #1e2232 0%, #141620 60%, #111218 100%);
-  }
-
-  /* LED strip on button top */
-  .sound-btn .led-strip {
-    position: absolute;
-    top: 0;
-    left: 8px;
-    right: 8px;
-    height: 2px;
-    border-radius: 0 0 2px 2px;
-    background: var(--btn-color, #00cfff);
-    opacity: 0.6;
-    transition: opacity 0.15s, box-shadow 0.15s;
-  }
-
-  .sound-btn:hover .led-strip,
-  .sound-btn.playing .led-strip {
-    opacity: 1;
-    box-shadow: 0 0 8px var(--btn-color, #00cfff), 0 0 16px var(--btn-color, #00cfff);
-  }
-
-  /* Button icon */
-  .btn-icon {
-    position: relative;
-    z-index: 1;
-    font-size: 28px;
-    line-height: 1;
-    transition: transform 0.15s ease;
-    filter: drop-shadow(0 0 6px var(--btn-color, #00cfff));
-  }
-
-  .sound-btn:hover .btn-icon,
-  .sound-btn.playing .btn-icon {
-    transform: scale(1.15);
-  }
-
-  /* Button label */
-  .btn-label {
-    position: relative;
-    z-index: 1;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--text-bright);
-    text-align: center;
-    padding: 0 6px;
-    word-break: break-word;
-    cursor: text;
-    min-height: 16px;
-  }
-
-  .btn-label[contenteditable="true"] {
-    outline: none;
-    border-bottom: 1px dashed rgba(0,207,255,0.5);
-    padding-bottom: 2px;
-    cursor: text;
-  }
-
-  /* Press indicator dot */
-  .btn-dot {
-    position: absolute;
-    bottom: 8px;
-    right: 10px;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--btn-color, #00cfff);
-    opacity: 0.4;
-    transition: opacity 0.15s, box-shadow 0.15s;
-  }
-
-  .sound-btn.playing .btn-dot {
-    opacity: 1;
-    box-shadow: 0 0 6px var(--btn-color, #00cfff);
-    animation: dotPulse 0.5s ease-in-out infinite alternate;
-  }
-
-  @keyframes dotPulse {
-    from { opacity: 0.6; }
-    to { opacity: 1; }
-  }
-
-  /* Screw corners */
-  .screw-corner {
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #3a3a46, #1a1a22);
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
-  }
-
-  .screw-corner::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(45deg);
-    width: 7px;
-    height: 1px;
-    background: rgba(0,0,0,0.6);
-    box-shadow: 0 0 0 0.5px rgba(255,255,255,0.1), 0 2px 0 0 rgba(0,0,0,0.4);
-  }
-
-  /* Bottom control bar */
-  .control-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    padding-top: 16px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-    margin-top: 4px;
-  }
-
-  /* Add button */
-  .add-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background: linear-gradient(135deg, rgba(0,207,255,0.1), rgba(123,47,255,0.1));
-    border: 1px solid rgba(0,207,255,0.35);
-    border-radius: 8px;
-    color: var(--accent);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .add-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(0,207,255,0.15), rgba(123,47,255,0.15));
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-
-  .add-btn:hover::before { opacity: 1; }
-
-  .add-btn:hover {
-    border-color: rgba(0,207,255,0.7);
-    box-shadow: 0 0 16px rgba(0,207,255,0.25), 0 0 32px rgba(0,207,255,0.1);
-  }
-
-  .add-btn:active { transform: scale(0.97); }
-
-  .add-icon {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 1.5px solid var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-
-  /* Page controls */
-  .page-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: auto;
-  }
-
-  .page-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: var(--text-bright);
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
-  }
-
-  .page-btn:hover:not(:disabled) {
-    background: rgba(0,207,255,0.1);
-    border-color: rgba(0,207,255,0.4);
-    color: var(--accent);
-  }
-
-  .page-btn:disabled {
-    opacity: 0.25;
-    cursor: default;
-  }
-
-  .page-info {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    min-width: 60px;
-    text-align: center;
-  }
-
-  /* Upload overlay on custom buttons */
-  .upload-zone {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.5);
-    border-top: 1px solid rgba(255,255,255,0.06);
-    border-radius: 0 0 9px 9px;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.15s;
-    gap: 4px;
-  }
-
-  .sound-btn:hover .upload-zone {
-    opacity: 1;
-  }
-
-  .upload-zone span {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 1px;
-    color: rgba(255,255,255,0.5);
-    text-transform: uppercase;
-  }
-
-  .upload-zone svg {
-    width: 10px;
-    height: 10px;
-    stroke: rgba(255,255,255,0.5);
-    fill: none;
-  }
-
-  .upload-input {
-    display: none;
-  }
-
-  /* Confetti canvas */
-  #confetti-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 9999;
-  }
-
-  /* Visualizer bar (decorative) */
-  .visualizer {
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 30px;
-    padding: 0 4px;
-  }
-
-  .viz-bar {
-    width: 3px;
-    border-radius: 2px 2px 0 0;
-    transition: height 0.1s ease;
-    background: var(--accent);
-    opacity: 0.5;
-    animation: vizIdle 1.5s ease-in-out infinite alternate;
-  }
-
-  @each { }
-
-  .viz-bar:nth-child(1) { animation-delay: 0.0s; }
-  .viz-bar:nth-child(2) { animation-delay: 0.1s; }
-  .viz-bar:nth-child(3) { animation-delay: 0.2s; }
-  .viz-bar:nth-child(4) { animation-delay: 0.3s; }
-  .viz-bar:nth-child(5) { animation-delay: 0.4s; }
-  .viz-bar:nth-child(6) { animation-delay: 0.2s; }
-  .viz-bar:nth-child(7) { animation-delay: 0.1s; }
-  .viz-bar:nth-child(8) { animation-delay: 0.0s; }
-
-  @keyframes vizIdle {
-    from { height: 3px; }
-    to { height: 12px; }
-  }
-
-  .viz-bar.active {
-    opacity: 1;
-    animation: vizActive 0.12s ease-in-out infinite alternate;
-  }
-
-  @keyframes vizActive {
-    from { height: 4px; }
-    to { height: 28px; }
-  }
-
-  /* Bottom info strip */
-  .info-strip {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 8px 20px;
-    background: #0a0a0d;
-    border: 1px solid rgba(255,255,255,0.05);
-    border-top: none;
-    border-radius: 0 0 12px 12px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-  }
-
-  .info-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #00ff88;
-    box-shadow: 0 0 6px #00ff88;
-    animation: infoBlink 2s ease-in-out infinite;
-    flex-shrink: 0;
-  }
-
-  @keyframes infoBlink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  /* Scrolling status text */
-  .status-scroll {
-    overflow: hidden;
-    flex: 1;
-  }
-
-  #status-text {
-    display: inline-block;
-    white-space: nowrap;
-    animation: scrollText 20s linear infinite;
-  }
-
-  @keyframes scrollText {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
-  }
-
-  /* Tooltip */
-  .tooltip {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.9);
-    color: var(--accent);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 1px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    white-space: nowrap;
-    border: 1px solid rgba(0,207,255,0.2);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s;
-    z-index: 10;
-  }
-
-  .sound-btn:hover .tooltip { opacity: 1; }
-
-  /* Custom audio badge on default buttons */
-  .custom-audio-badge {
-    position: absolute;
-    top: 6px;
-    left: 7px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 7px;
-    letter-spacing: 1px;
-    color: var(--accent);
-    background: rgba(0,207,255,0.12);
-    border: 1px solid rgba(0,207,255,0.3);
-    border-radius: 3px;
-    padding: 2px 4px;
-    z-index: 5;
-    pointer-events: none;
-  }
-  .del-mode-btn { color: #ff3366; border-color: rgba(255,51,102,0.35); }
-  .del-mode-btn:hover { border-color: rgba(255,51,102,0.7) !important; box-shadow: 0 0 16px rgba(255,51,102,0.25) !important; }
-  .del-mode-btn.active { background: rgba(255,51,102,0.15) !important; border-color: rgba(255,51,102,0.8) !important; box-shadow: 0 0 20px rgba(255,51,102,0.3) !important; }
-
-  .delete-btn {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: rgba(255,30,60,0.85);
-    border: 1px solid rgba(255,80,100,0.7);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 10;
-    opacity: 0;
-    transform: scale(0.5);
-    transition: opacity 0.15s, transform 0.15s;
-    box-shadow: 0 0 8px rgba(255,30,60,0.6);
-  }
-
-  body.delete-mode .delete-btn {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  body.delete-mode .sound-btn {
-    animation: deleteShake 0.5s ease-in-out infinite alternate;
-  }
-
-  @keyframes deleteShake {
-    from { transform: rotate(-0.8deg); }
-    to   { transform: rotate(0.8deg); }
-  }
-
-  body.delete-mode .sound-btn:active { transform: scale(0.94) rotate(0deg); }
-
-  /* Confirm dialog */
-  .confirm-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    z-index: 9998;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .confirm-box {
-    background: #141418;
-    border: 1px solid rgba(255,51,102,0.4);
-    border-radius: 12px;
-    padding: 28px 32px;
-    max-width: 340px;
-    width: 90%;
-    text-align: center;
-    box-shadow: 0 0 40px rgba(255,30,60,0.2);
-    font-family: 'Rajdhani', sans-serif;
-  }
-
-  .confirm-box h3 {
-    font-family: 'Orbitron', monospace;
-    font-size: 14px;
-    letter-spacing: 3px;
-    color: #ff3366;
-    margin-bottom: 10px;
-  }
-
-  .confirm-box p {
-    font-size: 14px;
-    color: rgba(232,244,255,0.7);
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-
-  .confirm-box strong {
-    color: #e8f4ff;
-    font-weight: 700;
-  }
-
-  .confirm-btns {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-  }
-
-  .confirm-yes {
-    padding: 9px 24px;
-    background: rgba(255,51,102,0.15);
-    border: 1px solid rgba(255,51,102,0.6);
-    border-radius: 7px;
-    color: #ff3366;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .confirm-yes:hover { background: rgba(255,51,102,0.3); }
-
-  .confirm-no {
-    padding: 9px 24px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 7px;
-    color: rgba(232,244,255,0.6);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .confirm-no:hover { background: rgba(255,255,255,0.08); color: #e8f4ff; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESL Sound Card SD-X1 | Teacher Dave</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
+
+        :root {
+            --bg-black: #050505;
+            --panel-bg: #0d0d0d;
+            --card-bg: #121212;
+            --accent-cyan: #00f2ff;
+            --accent-pink: #ff007b;
+            --accent-yellow: #f9d423;
+            --border-color: #222;
+            --text-gray: #666;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Main Chassis */
+        .chassis {
+            width: 95%;
+            max-width: 1000px;
+            background: var(--panel-bg);
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 2px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        /* Top RGB Light Strip */
+        .rgb-strip {
+            height: 3px;
+            width: 100%;
+            background: linear-gradient(90deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+            background-size: 200%;
+            animation: moveStrip 5s linear infinite;
+            border-radius: 10px 10px 0 0;
+        }
+
+        @keyframes moveStrip {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        /* Header Section */
+        .header {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .title-block h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            letter-spacing: 4px;
+            margin: 0;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+        }
+
+        .title-block p {
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            margin: 2px 0 0 0;
+            letter-spacing: 2px;
+        }
+
+        .status-dots { display: flex; gap: 8px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot-r { background: var(--accent-pink); }
+        .dot-y { background: var(--accent-yellow); }
+        .dot-g { background: #48ff00; }
+
+        /* Sound Grid Container */
+        .main-deck {
+            padding: 40px;
+            background-image: radial-gradient(circle at 50% 50%, #151515 0%, transparent 100%);
+            min-height: 350px;
+        }
+
+        .grid-header {
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #1a1a1a;
+            padding-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+        }
+
+        /* Buttons Styling */
+        .sound-pad {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 20px 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sound-pad:hover { border-color: #444; background: #111; }
+
+        .pad-emoji {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
+            display: block;
+        }
+
+        .pad-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #ccc;
+            text-transform: uppercase;
+        }
+
+        /* Active Glows (Per Pad) */
+        .sound-pad::before {
+            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 30%; height: 2px; background: transparent; transition: 0.3s;
+        }
+
+        .playing { border-color: var(--accent-cyan) !important; background: #001a1c !important; }
+        .playing .pad-emoji { transform: scale(1.1); transition: 0.1s; }
+
+        /* Control Footer */
+        .deck-footer {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #1a1a1a;
+        }
+
+        .action-btns { display: flex; gap: 15px; }
+        
+        .btn-ui {
+            background: transparent;
+            border: 1px solid #333;
+            color: var(--accent-cyan);
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-ui:hover { background: rgba(0, 242, 255, 0.1); border-color: var(--accent-cyan); }
+        .btn-delete { color: var(--accent-pink); }
+        .btn-delete:hover { background: rgba(255, 0, 123, 0.1); border-color: var(--accent-pink); }
+
+        .nav-controls { display: flex; align-items: center; gap: 20px; color: var(--text-gray); font-size: 0.8rem; }
+        .nav-arrow { background: #111; border: 1px solid #222; color: #555; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
+        .nav-arrow:hover { color: #fff; border-color: #444; }
+
+        /* Pad Settings Overlay */
+        .pad-settings {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #1a1a1a;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .pad-unit:hover .pad-settings { display: flex; }
+
+        input[type="text"], input[type="range"] {
+            background: #000; border: 1px solid #333; color: #00f2ff; font-size: 0.7rem; padding: 4px;
+        }
+
+        .system-status { font-size: 0.6rem; color: #333; letter-spacing: 1px; }
+
+    </style>
 </head>
 <body>
 
-<canvas id="confetti-canvas"></canvas>
-
-<div class="device-wrap">
-  <!-- Brand top bar -->
-  <div class="brand-bar">
-    <div>
-      <div class="brand-name">ESL SOUND CARD</div>
-      <div class="brand-model">BY TEACHER DAVE · RGB · MODEL SD-X1</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:16px;">
-      <div class="visualizer" id="visualizer">
-        <div class="viz-bar"></div>
-        <div class="viz-bar"></div>
-        <div class="viz-bar"></div>
-        <div class="viz-bar"></div>
-        <div class="viz-bar"></div>
-        <div class="viz-bar"></div>
-        <div class="viz-bar"></div>
-        <div class="viz-bar"></div>
-      </div>
-      <div class="status-lights">
-        <div class="sled"></div>
-        <div class="sled"></div>
-        <div class="sled"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main chassis -->
-  <div class="chassis">
-    <!-- Screw corners -->
-    <div class="screw-corner" style="position:absolute;top:8px;left:8px;"></div>
-    <div class="screw-corner" style="position:absolute;top:8px;right:8px;"></div>
-    <div class="screw-corner" style="position:absolute;bottom:8px;left:8px;"></div>
-    <div class="screw-corner" style="position:absolute;bottom:8px;right:8px;"></div>
-
-    <div class="rgb-strip"></div>
-
-    <div class="chassis-inner">
-      <div class="section-label">SOUND BUTTONS <span style="color:rgba(0,207,255,0.5);font-size:8px;" id="page-indicator">PAGE 1</span></div>
-
-      <div class="btn-grid" id="btn-grid"></div>
-
-      <div class="control-bar">
-        <button class="add-btn" onclick="addCustomButton()">
-          <div class="add-icon">+</div>
-          ADD BUTTON
-        </button>
-
-        <button class="add-btn del-mode-btn" id="del-mode-btn" onclick="toggleDeleteMode()">
-          <div class="add-icon" style="border-color:currentColor;">&#x2715;</div>
-          DELETE
-        </button>
-
-        <div class="page-controls">
-          <button class="page-btn" id="prev-btn" onclick="changePage(-1)" disabled>&#8249;</button>
-          <div class="page-info" id="page-info">1 / 1</div>
-          <button class="page-btn" id="next-btn" onclick="changePage(1)" disabled>&#8250;</button>
+    <div class="chassis">
+        <div class="rgb-strip"></div>
+        
+        <div class="header">
+            <div class="title-block">
+                <h1>ESL SOUND CARD</h1>
+                <p>BY TEACHER DAVE • RGB • MODEL SD-X1</p>
+            </div>
+            <div class="status-dots">
+                <div class="dot dot-r"></div>
+                <div class="dot dot-y"></div>
+                <div class="dot dot-g"></div>
+            </div>
         </div>
-      </div>
+
+        <div class="main-deck">
+            <div class="grid-header">SOUND BUTTONS — PAGE <span id="page-num">1</span></div>
+            <div id="grid" class="grid"></div>
+        </div>
+
+        <div class="deck-footer">
+            <div class="action-btns">
+                <button class="btn-ui" onclick="addNewPad()"><span>+</span> ADD BUTTON</button>
+                <button class="btn-ui btn-delete" onclick="exportData()">💾 BACKUP DECK</button>
+                <button class="btn-ui" style="color:#555" onclick="document.getElementById('importFile').click()">📂 LOAD</button>
+                <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+            </div>
+            
+            <div class="nav-controls">
+                <button class="nav-arrow" onclick="movePage(-1)">‹</button>
+                <span id="page-indicator">1 / 1</span>
+                <button class="nav-arrow" onclick="movePage(1)">›</button>
+            </div>
+        </div>
+        
+        <div style="padding: 10px 30px; display: flex; justify-content: space-between;">
+            <div class="system-status">SYSTEM READY</div>
+            <div class="system-status">ESL SOUND CARD BY TEACHER DA V2.0</div>
+        </div>
     </div>
-  </div>
 
-  <!-- Bottom info strip -->
-  <div class="info-strip">
-    <div class="info-dot"></div>
-    <div class="status-scroll">
-      <span id="status-text">SYSTEM READY · ESL SOUND CARD BY TEACHER DAVE · CLICK ANY BUTTON TO PLAY · ADD CUSTOM BUTTONS · RENAME BY CLICKING LABEL · UPLOAD YOUR OWN AUDIO</span>
-    </div>
-    <div style="flex-shrink:0;">v2.0</div>
-  </div>
-</div>
+    <script>
+        const limit = 5;
+        let page = 1;
+        const storageKey = 'TeacherDave_SDX1';
+        
+        const defaults = [
+            { name: 'Correct', emoji: '✅', src: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3', speed: 1 },
+            { name: 'Incorrect', emoji: '❌', src: 'https://assets.mixkit.co/active_storage/sfx/1119/1119-preview.mp3', speed: 1 },
+            { name: 'Laugh', emoji: '😂', src: 'https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.mp3', speed: 1 },
+            { name: 'Confetti', emoji: '🎉', src: 'https://assets.mixkit.co/active_storage/sfx/2014/2014-preview.mp3', speed: 1 },
+            { name: 'Drum Roll', emoji: '🥁', src: 'https://assets.mixkit.co/active_storage/sfx/2020/2020-preview.mp3', speed: 1 }
+        ];
 
-<script>
-// ── Audio Engine ──────────────────────────────────────────────
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let pads = JSON.parse(localStorage.getItem(storageKey)) || [...defaults];
 
-function unlock() {
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-document.addEventListener('click', unlock, { once: true });
+        function sync() { localStorage.setItem(storageKey, JSON.stringify(pads)); }
 
-function playTone(type) {
-  unlock();
-  if (type === 'correct') {
-    // Ascending happy chime
-    playMelody([523.25, 659.25, 783.99], [0, 0.12, 0.24], 0.5, 'sine', 0.35);
-  } else if (type === 'incorrect') {
-    // Descending buzzer
-    playMelody([220, 180, 140], [0, 0.15, 0.3], 0.6, 'sawtooth', 0.2);
-  } else if (type === 'laugh') {
-    playLaugh();
-  } else if (type === 'drumroll') {
-    playDrumroll();
-  } else if (type === 'confetti') {
-    launchConfetti();
-    playMelody([523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.50], 
-               [0, 0.06, 0.12, 0.18, 0.24, 0.3, 0.36, 0.42], 0.4, 'sine', 0.25);
-  }
-}
+        function render() {
+            const container = document.getElementById('grid');
+            container.innerHTML = '';
+            const start = (page - 1) * limit;
+            const currentSet = pads.slice(start, start + limit);
 
-function playMelody(freqs, times, vol, wave, duration) {
-  freqs.forEach((freq, i) => {
-    setTimeout(() => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.type = wave;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-      osc.start(audioCtx.currentTime);
-      osc.stop(audioCtx.currentTime + duration);
-    }, times[i] * 1000);
-  });
-}
+            currentSet.forEach((pad, i) => {
+                const idx = start + i;
+                const unit = document.createElement('div');
+                unit.className = 'pad-unit';
+                
+                // Sound Pad
+                const btn = document.createElement('div');
+                btn.className = 'sound-pad';
+                btn.innerHTML = `<span class="pad-emoji">${pad.emoji || '🎵'}</span><span class="pad-name">${pad.name}</span>`;
+                
+                const audio = new Audio(pad.src);
+                btn.onclick = (e) => {
+                    if(e.target.tagName === 'INPUT') return;
+                    audio.playbackRate = pad.speed || 1;
+                    audio.currentTime = 0;
+                    audio.play();
+                    btn.classList.add('playing');
+                    audio.onended = () => btn.classList.remove('playing');
+                };
+                unit.appendChild(btn);
 
-function playLaugh() {
-  const steps = 8;
-  for (let i = 0; i < steps; i++) {
-    setTimeout(() => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.type = 'sine';
-      const base = 300 + Math.sin(i * 0.8) * 80;
-      osc.frequency.setValueAtTime(base, audioCtx.currentTime);
-      osc.frequency.linearRampToValueAtTime(base + 120, audioCtx.currentTime + 0.09);
-      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-      osc.start(audioCtx.currentTime);
-      osc.stop(audioCtx.currentTime + 0.15);
-    }, i * 120);
-  }
-}
+                // Hidden Settings (Visible on Hover)
+                const settings = document.createElement('div');
+                settings.className = 'pad-settings';
+                
+                const emojiIn = document.createElement('input');
+                emojiIn.type = 'text'; emojiIn.value = pad.emoji; emojiIn.placeholder = "Emoji";
+                emojiIn.onchange = (e) => { pads[idx].emoji = e.target.value; sync(); render(); };
+                
+                const nameIn = document.createElement('input');
+                nameIn.type = 'text'; nameIn.value = pad.name; emojiIn.placeholder = "Name";
+                nameIn.onchange = (e) => { pads[idx].name = e.target.value; sync(); render(); };
 
-function playDrumroll() {
-  const beats = 20;
-  for (let i = 0; i < beats; i++) {
-    const delay = i * (50 - i * 1.5);
-    setTimeout(() => {
-      const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.04, audioCtx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let s = 0; s < data.length; s++) data[s] = (Math.random() * 2 - 1) * 0.5;
-      const src = audioCtx.createBufferSource();
-      const gain = audioCtx.createGain();
-      src.connect(gain);
-      gain.connect(audioCtx.destination);
-      src.buffer = buf;
-      gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
-      src.start(audioCtx.currentTime);
-    }, delay);
-  }
-  setTimeout(() => {
-    // Final cymbal crash
-    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.6, audioCtx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let s = 0; s < data.length; s++) data[s] = Math.random() * 2 - 1;
-    const src = audioCtx.createBufferSource();
-    const gain = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'highpass';
-    filter.frequency.value = 4000;
-    src.connect(filter);
-    filter.connect(gain);
-    gain.connect(audioCtx.destination);
-    src.buffer = buf;
-    gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-    src.start(audioCtx.currentTime);
-  }, 900);
-}
+                const fileIn = document.createElement('input');
+                fileIn.type = 'file'; fileIn.style.fontSize = '8px';
+                fileIn.onchange = (e) => {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => { pads[idx].src = ev.target.result; sync(); render(); };
+                    reader.readAsDataURL(e.target.files[0]);
+                };
 
-// ── Confetti ──────────────────────────────────────────────────
-const confCanvas = document.getElementById('confetti-canvas');
-const confCtx = confCanvas.getContext('2d');
-let confParticles = [];
-let confRunning = false;
+                const del = document.createElement('button');
+                del.innerText = "DELETE PAD";
+                del.style.background = "none"; del.style.border = "1px solid #300"; del.style.color = "#600"; del.style.fontSize = "8px";
+                del.onclick = () => { if(confirm("Delete?")) { pads.splice(idx, 1); sync(); render(); } };
 
-function resizeConf() {
-  confCanvas.width = window.innerWidth;
-  confCanvas.height = window.innerHeight;
-}
-resizeConf();
-window.addEventListener('resize', resizeConf);
+                settings.appendChild(emojiIn);
+                settings.appendChild(nameIn);
+                settings.appendChild(fileIn);
+                settings.appendChild(del);
+                unit.appendChild(settings);
 
-const COLORS = ['#ff0080','#ff6600','#ffff00','#00ff88','#00cfff','#7b2fff','#ff3366','#00ffcc'];
+                container.appendChild(unit);
+            });
 
-function launchConfetti() {
-  for (let i = 0; i < 160; i++) {
-    confParticles.push({
-      x: Math.random() * confCanvas.width,
-      y: -10,
-      w: 8 + Math.random() * 8,
-      h: 5 + Math.random() * 5,
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      speed: 3 + Math.random() * 5,
-      spin: (Math.random() - 0.5) * 0.3,
-      angle: 0,
-      drift: (Math.random() - 0.5) * 2,
-      opacity: 1
-    });
-  }
-  if (!confRunning) animateConf();
-}
-
-function animateConf() {
-  confRunning = true;
-  confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
-  confParticles.forEach(p => {
-    p.y += p.speed;
-    p.x += p.drift;
-    p.angle += p.spin;
-    if (p.y > confCanvas.height * 0.7) p.opacity -= 0.02;
-    confCtx.save();
-    confCtx.globalAlpha = Math.max(0, p.opacity);
-    confCtx.translate(p.x, p.y);
-    confCtx.rotate(p.angle);
-    confCtx.fillStyle = p.color;
-    confCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-    confCtx.restore();
-  });
-  confParticles = confParticles.filter(p => p.opacity > 0);
-  if (confParticles.length > 0) {
-    requestAnimationFrame(animateConf);
-  } else {
-    confRunning = false;
-  }
-}
-
-// ── Visualizer ────────────────────────────────────────────────
-let vizTimeout;
-const vizBars = document.querySelectorAll('.viz-bar');
-
-function activateViz() {
-  vizBars.forEach(b => b.classList.add('active'));
-  clearTimeout(vizTimeout);
-  vizTimeout = setTimeout(() => vizBars.forEach(b => b.classList.remove('active')), 1200);
-}
-
-// ── Button colors ─────────────────────────────────────────────
-const DEFAULT_COLORS = ['#00ff88', '#ff3366', '#ffcc00', '#00cfff', '#7b2fff'];
-const EXTRA_COLORS = [
-  '#ff6600','#ff00cc','#00ffcc','#aaff00',
-  '#ff3399','#3399ff','#ff9900','#cc00ff',
-  '#00ff44','#ff0044','#0099ff','#ffff00'
-];
-
-// ── Buttons state ─────────────────────────────────────────────
-const BUTTONS_PER_PAGE = 10;
-let currentPage = 0;
-const STORAGE_KEY = 'sounddeck_pro_buttons';
-const COLOR_IDX_KEY = 'sounddeck_pro_color_idx';
-const DEFAULT_AUDIO_KEY = 'sounddeck_pro_default_audio';
-
-const defaultButtons = [
-  { id: 'correct',  icon: '✅', label: 'Correct',   color: DEFAULT_COLORS[0], type: 'default' },
-  { id: 'incorrect',icon: '❌', label: 'Incorrect',  color: DEFAULT_COLORS[1], type: 'default' },
-  { id: 'laugh',    icon: '😂', label: 'Laugh',      color: DEFAULT_COLORS[2], type: 'default' },
-  { id: 'confetti', icon: '🎉', label: 'Confetti',   color: DEFAULT_COLORS[3], type: 'default' },
-  { id: 'drumroll', icon: '🥁', label: 'Drum Roll',  color: DEFAULT_COLORS[4], type: 'default' },
-];
-
-// ── Persistence ───────────────────────────────────────────────
-function saveToStorage() {
-  const customOnly = allButtons.filter(b => b.type === 'custom');
-  // Save default button audio overrides separately
-  const defaultOverrides = {};
-  allButtons.filter(b => b.type === 'default').forEach(b => {
-    if (b.audioBase64) defaultOverrides[b.id] = { audioBase64: b.audioBase64, audioMime: b.audioMime };
-  });
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(customOnly));
-    localStorage.setItem(COLOR_IDX_KEY, String(colorIndex));
-    localStorage.setItem(DEFAULT_AUDIO_KEY, JSON.stringify(defaultOverrides));
-  } catch(e) {
-    showStorageWarning();
-  }
-}
-
-function loadFromStorage() {
-  try {
-    // Load default audio overrides and apply to defaultButtons
-    const rawOverrides = localStorage.getItem(DEFAULT_AUDIO_KEY);
-    if (rawOverrides) {
-      const overrides = JSON.parse(rawOverrides);
-      defaultButtons.forEach(btn => {
-        if (overrides[btn.id]) {
-          btn.audioBase64 = overrides[btn.id].audioBase64;
-          btn.audioMime  = overrides[btn.id].audioMime;
-          btn.audioUrl   = 'data:' + btn.audioMime + ';base64,' + btn.audioBase64;
-          btn.hasCustomAudio = true;
+            document.getElementById('page-num').innerText = page;
+            document.getElementById('page-indicator').innerText = `${page} / ${Math.ceil(pads.length/limit) || 1}`;
         }
-      });
-    }
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const savedColorIdx = localStorage.getItem(COLOR_IDX_KEY);
-    if (savedColorIdx) colorIndex = parseInt(savedColorIdx) || 0;
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return parsed.map(btn => {
-      if (btn.audioBase64 && btn.audioMime) {
-        btn.audioUrl = 'data:' + btn.audioMime + ';base64,' + btn.audioBase64;
-      }
-      return btn;
-    });
-  } catch(e) {
-    return [];
-  }
-}
 
-function base64ToBlob(base64, mime) {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], { type: mime });
-}
+        function addNewPad() { pads.push({ name: 'NEW', emoji: '✨', src: '', speed: 1 }); sync(); render(); }
+        function movePage(dir) { 
+            if (dir === 1 && page * limit < pads.length) page++; 
+            else if (dir === -1 && page > 1) page--; 
+            render(); 
+        }
 
-function showStorageWarning() {
-  const bar = document.getElementById('status-text');
-  const prev = bar.textContent;
-  bar.textContent = '⚠ STORAGE FULL — Some audio may not be saved. Try using shorter audio clips.';
-  setTimeout(() => { bar.textContent = prev; }, 5000);
-}
+        function exportData() {
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(JSON.stringify(pads));
+            const link = document.createElement('a'); link.href = dataUri; link.download = 'TeacherDave_SDX1_Backup.json'; link.click();
+        }
 
-let allButtons = [...defaultButtons, ...loadFromStorage()];
-let colorIndex = parseInt(localStorage.getItem(COLOR_IDX_KEY) || '0');
+        function importData(e) {
+            const reader = new FileReader();
+            reader.onload = (ev) => { pads = JSON.parse(ev.target.result); sync(); render(); };
+            reader.readAsText(e.target.files[0]);
+        }
 
-function getNextColor() {
-  const c = EXTRA_COLORS[colorIndex % EXTRA_COLORS.length];
-  colorIndex++;
-  return c;
-}
-
-// ── Delete Mode ───────────────────────────────────────────────
-let deleteMode = false;
-
-function toggleDeleteMode() {
-  deleteMode = !deleteMode;
-  document.body.classList.toggle('delete-mode', deleteMode);
-  const btn = document.getElementById('del-mode-btn');
-  btn.classList.toggle('active', deleteMode);
-  btn.innerHTML = deleteMode
-    ? `<div class="add-icon" style="border-color:currentColor;">&#10003;</div> DONE`
-    : `<div class="add-icon" style="border-color:currentColor;">&#x2715;</div> DELETE`;
-}
-
-function confirmDelete(idx, label) {
-  const overlay = document.createElement('div');
-  overlay.className = 'confirm-overlay';
-  overlay.innerHTML = `
-    <div class="confirm-box">
-      <h3>DELETE BUTTON</h3>
-      <p>Are you sure you want to delete <strong>"${label}"</strong>? This cannot be undone.</p>
-      <div class="confirm-btns">
-        <button class="confirm-yes" id="conf-yes">DELETE</button>
-        <button class="confirm-no" id="conf-no">CANCEL</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-
-  document.getElementById('conf-yes').addEventListener('click', () => {
-    allButtons.splice(idx, 1);
-    saveToStorage();
-    if (currentPage >= getTotalPages()) currentPage = Math.max(0, getTotalPages() - 1);
-    overlay.remove();
-    render();
-  });
-
-  document.getElementById('conf-no').addEventListener('click', () => overlay.remove());
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-}
-
-// ── Render ────────────────────────────────────────────────────
-function getTotalPages() {
-  return Math.max(1, Math.ceil(allButtons.length / BUTTONS_PER_PAGE));
-}
-
-function render() {
-  const grid = document.getElementById('btn-grid');
-  grid.innerHTML = '';
-  const totalPages = getTotalPages();
-  if (currentPage >= totalPages) currentPage = totalPages - 1;
-
-  const start = currentPage * BUTTONS_PER_PAGE;
-  const end = Math.min(start + BUTTONS_PER_PAGE, allButtons.length);
-  const pageBtns = allButtons.slice(start, end);
-
-  pageBtns.forEach((btn, localIdx) => {
-    const globalIdx = start + localIdx;
-    const el = document.createElement('button');
-    el.className = 'sound-btn';
-    el.style.setProperty('--btn-color', btn.color);
-    el.dataset.index = globalIdx;
-
-    const uploadSVG = `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;stroke:rgba(255,255,255,0.5);fill:none;flex-shrink:0;"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg>`;
-    const hasCustom = !!btn.audioBase64;
-    let uploadZoneHTML = '';
-    if (btn.type === 'custom') {
-      uploadZoneHTML = `<div class="upload-zone" onclick="triggerUpload(event, ${globalIdx})">${uploadSVG}<span>UPLOAD AUDIO</span></div><input type="file" accept="audio/*" class="upload-input" id="upload-${globalIdx}" onchange="handleUpload(event, ${globalIdx})">`;
-    } else {
-      uploadZoneHTML = `<div class="upload-zone default-upload" style="height:${hasCustom?'44px':'28px'};flex-direction:column;gap:3px;"><div style="display:flex;align-items:center;gap:4px;cursor:pointer;" onclick="triggerUpload(event, ${globalIdx})">${uploadSVG}<span style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.5);text-transform:uppercase;">${hasCustom?'REPLACE AUDIO':'UPLOAD AUDIO'}</span></div>${hasCustom?`<div style="display:flex;align-items:center;gap:4px;cursor:pointer;" onclick="resetDefaultAudio(event,${globalIdx})"><span style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;color:rgba(255,100,100,0.7);text-transform:uppercase;">↺ RESET TO DEFAULT</span></div>`:''}</div><input type="file" accept="audio/*" class="upload-input" id="upload-${globalIdx}" onchange="handleUpload(event, ${globalIdx})">`;
-    }
-
-    el.innerHTML = `
-      <div class="btn-body"></div>
-      <div class="btn-glow"></div>
-      <div class="led-strip"></div>
-      ${hasCustom && btn.type==='default' ? '<div class="custom-audio-badge">CUSTOM</div>' : ''}
-      <div class="btn-icon">${btn.icon}</div>
-      <div class="btn-label" ${btn.type === 'custom' ? 'contenteditable="true" spellcheck="false"' : ''} 
-           data-index="${globalIdx}">${btn.label}</div>
-      <div class="btn-dot"></div>
-      <div class="tooltip">${btn.type === 'custom' ? 'CLICK LABEL TO RENAME' : (hasCustom ? 'CUSTOM AUDIO · HOVER TO CHANGE' : 'HOVER TO UPLOAD CUSTOM AUDIO')}</div>
-      <div class="delete-btn" title="Delete">&#x2715;</div>
-      ${uploadZoneHTML}
-    `;
-
-    // Click to play (not on label or upload zone)
-    el.addEventListener('click', (e) => {
-      if (e.target.classList.contains('delete-btn')) {
-        confirmDelete(globalIdx, btn.label);
-        return;
-      }
-      if (e.target.classList.contains('btn-label') && btn.type === 'custom') return;
-      if (e.target.closest('.upload-zone')) return;
-      if (e.target.closest('.upload-input')) return;
-      if (deleteMode) return; // in delete mode, only delete-btn works
-      handleButtonPress(globalIdx, el);
-    });
-
-    // Rename on blur
-    if (btn.type === 'custom') {
-      const labelEl = el.querySelector('.btn-label');
-      labelEl.addEventListener('blur', (e) => {
-        const newLabel = e.target.innerText.trim() || 'Button';
-        allButtons[globalIdx].label = newLabel;
-        saveToStorage();
-      });
-      labelEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); labelEl.blur(); }
-      });
-    }
-
-    grid.appendChild(el);
-  });
-
-  // Pagination
-  const totalP = getTotalPages();
-  document.getElementById('page-info').textContent = `${currentPage + 1} / ${totalP}`;
-  document.getElementById('page-indicator').textContent = `PAGE ${currentPage + 1}`;
-  document.getElementById('prev-btn').disabled = currentPage === 0;
-  document.getElementById('next-btn').disabled = currentPage >= totalP - 1;
-}
-
-function handleButtonPress(idx, el) {
-  const btn = allButtons[idx];
-  unlock();
-
-  // Visual feedback
-  el.classList.add('playing');
-  setTimeout(() => el.classList.remove('playing'), 600);
-  activateViz();
-
-  // Audio — use custom audio if uploaded, else built-in synth
-  if (btn.audioUrl) {
-    const audio = new Audio(btn.audioUrl);
-    audio.play().catch(() => {});
-  } else if (btn.type === 'default') {
-    playTone(btn.id);
-  }
-}
-
-function triggerUpload(e, idx) {
-  e.stopPropagation();
-  document.getElementById(`upload-${idx}`).click();
-}
-
-function handleUpload(e, idx) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const btn = allButtons[idx];
-  btn.icon = '⏳';
-  render();
-
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    const dataUrl = ev.target.result;
-    const parts = dataUrl.split(',');
-    const mime = parts[0].split(':')[1].split(';')[0];
-    const base64 = parts[1];
-
-    allButtons[idx].audioBase64 = base64;
-    allButtons[idx].audioMime = mime;
-    allButtons[idx].audioUrl = dataUrl;
-    allButtons[idx].hasCustomAudio = true;
-    if (allButtons[idx].type === 'custom') {
-      allButtons[idx].icon = '🎵';
-      allButtons[idx].label = file.name.replace(/\.[^/.]+$/, '').substring(0, 18) || 'My Sound';
-    }
-    // Keep default button icon unchanged for defaults
-
-    saveToStorage();
-    render();
-  };
-  reader.readAsDataURL(file);
-}
-
-function resetDefaultAudio(e, idx) {
-  e.stopPropagation();
-  const btn = allButtons[idx];
-  delete btn.audioBase64;
-  delete btn.audioMime;
-  delete btn.audioUrl;
-  delete btn.hasCustomAudio;
-  saveToStorage();
-  render();
-}
-
-function addCustomButton() {
-  const color = getNextColor();
-  allButtons.push({
-    id: `custom-${Date.now()}`,
-    icon: '🔊',
-    label: 'Button',
-    color,
-    type: 'custom',
-    audioUrl: null,
-    audioBase64: null,
-    audioMime: null
-  });
-
-  saveToStorage();
-
-  // Jump to last page
-  currentPage = getTotalPages() - 1;
-  render();
-
-  // Focus the new button's label
-  setTimeout(() => {
-    const labels = document.querySelectorAll('.btn-label[contenteditable="true"]');
-    if (labels.length > 0) {
-      const last = labels[labels.length - 1];
-      last.focus();
-      const range = document.createRange();
-      range.selectNodeContents(last);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-  }, 50);
-}
-
-function changePage(dir) {
-  const total = getTotalPages();
-  currentPage = Math.max(0, Math.min(total - 1, currentPage + dir));
-  render();
-}
-
-// Initial render
-render();
-</script>
+        render();
+    </script>
 </body>
 </html>
